@@ -1,0 +1,61 @@
+<project name="SEMaTLabWork3" default="build" basedir=".">
+    <description>
+        Script for Apache Ant program to simplify compiling, testing etc. with Web-Programming 3rd lab work
+    </description>
+
+    <property file="build.properties"/>
+
+    <path id="dependencies-jars">
+        <fileset dir="${dir.libs}"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="${dir.target}"/>
+    </target>
+
+    <target name="compile" depends="init" description="Compile project source classes">
+        <mkdir dir="${dir.target.compile}"/>
+        <javac srcdir="${dir.source.code}" destdir="${dir.target.compile}" fork="true" classpathref="dependencies-jars"/>
+    </target>
+
+    <target name="build" depends="compile" description="Compile sources and pack to an executable war archive">
+        <mkdir dir="${dir.target.build}"/>
+        <war destfile="${dir.target.build}/${ant.project.name}.war" webxml="${path.web-xml}" basedir="${dir.source.resources}">
+            <classes dir="${dir.target.compile}" includes="/**/*.class"/>
+            <classes file="${path.hibernate-config}"/>
+            <lib dir="${dir.libs}"/>
+            <webinf file="${path.faces-config}"/>
+            <manifest>
+                <attribute name="Created-By" value="${user.name}"/>
+            </manifest>
+        </war>
+    </target>
+
+    <target name="clean" description="Clean compiled classes and temporary files">
+        <delete dir="${dir.target}"/>
+    </target>
+
+    <target name="test-compile" depends="init,compile" description="Compile project tests classes">
+        <mkdir dir="${dir.target.tests}"/>
+        <javac srcdir="${dir.source.test}" destdir="${dir.target.tests}" fork="true">
+            <classpath>
+                <path refid="dependencies-jars"/>
+                <pathelement location="${dir.target.compile}"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="test" depends="build,test-compile" description="Launch project Junit tests">
+        <junit printsummary="withOutAndErr" haltonfailure="yes">
+            <classpath>
+                <path refid="dependencies-jars"/>
+                <pathelement location="${dir.target.compile}"/>
+                <pathelement location="${dir.target.tests}"/>
+            </classpath>
+            <batchtest>
+                <fileset dir="${dir.target.tests}" includes="**/*Test.class" />
+            </batchtest>
+        </junit>
+    </target>
+
+</project>
