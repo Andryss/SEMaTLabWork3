@@ -20,13 +20,13 @@
 
     <target name="build" depends="compile" description="Compile sources and pack to an executable war archive">
         <mkdir dir="${dir.target.build}"/>
-        <war destfile="${dir.target.build}/${ant.project.name}.war" webxml="${path.web-xml}" basedir="${dir.source.resources}">
+        <war destfile="${dir.target.build}/${build.war.name}" webxml="${path.web-xml}" basedir="${dir.source.resources}">
             <classes dir="${dir.target.compile}" includes="/**/*.class"/>
             <classes file="${path.hibernate-config}"/>
             <lib dir="${dir.libs}"/>
             <webinf file="${path.faces-config}"/>
             <manifest>
-                <attribute name="Created-By" value="${user.name}"/>
+                <attribute name="Created-By" value="${build.manifest.creator}"/>
             </manifest>
         </war>
     </target>
@@ -56,6 +56,23 @@
                 <fileset dir="${dir.target.tests}" includes="**/*Test.class" />
             </batchtest>
         </junit>
+    </target>
+
+    <target name="scp" depends="build" description="Send built project to server via scp">
+        <scp
+                file="${dir.target.build}/${build.war.name}"
+                toDir="${scp.user}@${scp.host}:${scp.destdir}"
+                password="${scp.password}"
+                port="${scp.port}"
+        />
+    </target>
+
+    <target name="music" description="Play music after building the sources">
+        <sound>
+            <success source="success.wav"/>
+            <fail source="fail.wav"/>
+        </sound>
+        <antcall target="build"/>
     </target>
 
 </project>
