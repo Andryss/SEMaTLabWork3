@@ -23,3 +23,13 @@ dir.target=target
 dir.target.compile=${dir.target}/compile
 dir.target.build=${dir.target}/build
 dir.target.tests=${dir.target}/tests
+
+# Target specific properties
+build.war.name=${ant.project.name}.war
+build.manifest.creator=???
+
+scp.host=???
+scp.port=???
+scp.user=???
+scp.password=???
+scp.destdir=???
