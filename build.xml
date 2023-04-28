@@ -67,10 +67,21 @@
         />
     </target>
 
+    <target name="xml" description="Validate all project's xml files">
+        <xmlvalidate>
+            <attribute name="http://apache.org/xml/features/validation/schema"  value="true"/>
+            <attribute name="http://xml.org/sax/features/namespaces" value="true"/>
+            <fileset dir="${dir.source}" includes="**/*.xml"/>
+        </xmlvalidate>
+        <xmlvalidate lenient="true">
+            <fileset dir="${dir.source}" includes="**/*.xhtml"/>
+        </xmlvalidate>
+    </target>
+
     <target name="music" description="Play music after building the sources">
         <sound>
-            <success source="success.wav"/>
-            <fail source="fail.wav"/>
+            <success source="${music.dir}/music-success.wav"/>
+            <fail source="${music.dir}/music-fail.wav"/>
         </sound>
         <antcall target="build"/>
     </target>
