@@ -86,4 +86,9 @@
         <antcall target="build"/>
     </target>
 
+    <target name="native2ascii" depends="init" description="Use native2ascii transform with localization files">
+        <mkdir dir="${dir.target.native2ascii}"/>
+        <native2ascii encoding="UTF-8" src="${dir.source.resources}" dest="${dir.target.native2ascii}"/>
+    </target>
+
 </project>
