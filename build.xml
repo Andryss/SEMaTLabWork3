@@ -20,7 +20,8 @@
 
     <target name="build" depends="compile" description="Compile sources and pack to an executable war archive">
         <mkdir dir="${dir.target.build}"/>
-        <war destfile="${dir.target.build}/${build.war.name}" webxml="${path.web-xml}" basedir="${dir.source.resources}">
+        <war destfile="${dir.target.build}/${build.war.name}" webxml="${path.web-xml}" basedir="${dir.source.static}">
+            <classes dir="${dir.source.resources}"/>
             <classes dir="${dir.target.compile}" includes="/**/*.class"/>
             <classes file="${path.hibernate-config}"/>
             <lib dir="${dir.libs}"/>
@@ -37,7 +38,8 @@
 
     <target name="test-compile" depends="init,compile" description="Compile project tests classes">
         <mkdir dir="${dir.target.tests}"/>
-        <javac srcdir="${dir.source.test}" destdir="${dir.target.tests}" fork="true">
+        <mkdir dir="${test.compile.dir}"/>
+        <javac srcdir="${dir.source.test}" destdir="${test.compile.dir}" fork="true">
             <classpath>
                 <path refid="dependencies-jars"/>
                 <pathelement location="${dir.target.compile}"/>
@@ -46,14 +48,16 @@
     </target>
 
     <target name="test" depends="build,test-compile" description="Launch project Junit tests">
-        <junit printsummary="withOutAndErr" haltonfailure="yes">
+        <mkdir dir="${test.report.dir}"/>
+        <junit printsummary="withOutAndErr" haltonfailure="true">
             <classpath>
                 <path refid="dependencies-jars"/>
                 <pathelement location="${dir.target.compile}"/>
-                <pathelement location="${dir.target.tests}"/>
+                <pathelement location="${test.compile.dir}"/>
             </classpath>
-            <batchtest>
-                <fileset dir="${dir.target.tests}" includes="**/*Test.class" />
+            <batchtest todir="${test.report.dir}">
+                <fileset dir="${test.compile.dir}" includes="**/*Test.class" />
+                <formatter type="xml"/>
             </batchtest>
         </junit>
     </target>
