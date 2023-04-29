@@ -2,6 +2,7 @@
     <description>
         Script for Apache Ant program to simplify compiling, testing etc. with Web-Programming 3rd lab work
     </description>
+    <description>463563</description>
 
     <property file="build.properties"/>
 
@@ -93,6 +94,26 @@
     <target name="native2ascii" depends="init" description="Use native2ascii transform with localization files">
         <mkdir dir="${dir.target.native2ascii}"/>
         <native2ascii encoding="UTF-8" src="${dir.source.resources}" dest="${dir.target.native2ascii}"/>
+    </target>
+
+    <target name="report" depends="test" description="In case of all tests passed save xml junit report, add it to repository and commit">
+        <tstamp>
+            <format property="DATE_TIME" pattern="dd.MM.yyyy hh-mm-ss"/>
+        </tstamp>
+        <property name="report-filename" value="${report.report.filename} ${DATE_TIME}.xml"/>
+        <mkdir dir="${report.project.report.dir}"/>
+        <junitreport todir="${report.project.report.dir}" tofile="${report-filename}">
+            <fileset dir="${test.report.dir}"/>
+        </junitreport>
+        <exec executable="git" dir="${report.project.report.dir}">
+            <arg value="add"/>
+            <arg value="${report-filename}"/>
+        </exec>
+        <exec executable="git" dir="${report.project.report.dir}">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="Generate report ${report-filename}"/>
+        </exec>
     </target>
 
 </project>
