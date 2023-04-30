@@ -10,6 +10,8 @@
         <fileset dir="${dir.libs}"/>
     </path>
 
+    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+
     <target name="init">
         <mkdir dir="${dir.target}"/>
     </target>
@@ -100,7 +102,7 @@
         <tstamp>
             <format property="DATE_TIME" pattern="dd.MM.yyyy hh-mm-ss"/>
         </tstamp>
-        <property name="report-filename" value="${report.report.filename} ${DATE_TIME}.xml"/>
+        <property name="report-filename" value="JUNIT-Report ${DATE_TIME}.xml"/>
         <mkdir dir="${report.project.report.dir}"/>
         <junitreport todir="${report.project.report.dir}" tofile="${report-filename}">
             <fileset dir="${test.report.dir}"/>
@@ -114,6 +116,103 @@
             <arg value="-m"/>
             <arg value="Generate report ${report-filename}"/>
         </exec>
+    </target>
+
+    <target name="history" description="Create diff of files changed after last revision that can be built">
+        <trycatch>
+            <try>
+                <echo message="Try to compile last project version"/>
+                <antcall target="compile"/>
+                <echo message="Last project version compiled successfully"/>
+                <echo message="No diff file created"/>
+            </try>
+            <catch>
+                <echo message="Last project version compilation failed"/>
+
+                <echo message="Extract what HEAD points to (branch/commit)"/>
+                <trycatch>
+                    <try>
+                        <exec executable="git" dir="${dir.source}" failonerror="true">
+                            <arg value="symbolic-ref"/>
+                            <arg value="HEAD"/>
+                        </exec>
+                        <echo message="HEAD is point to branch"/>
+                        <exec executable="git" dir="${dir.source}" outputproperty="history.start-branch">
+                            <arg value="rev-parse"/>
+                            <arg value="--abbrev-ref"/>
+                            <arg value="HEAD"/>
+                        </exec>
+                    </try>
+                    <catch>
+                        <echo message="HEAD is in 'Detached head' state"/>
+                        <exec executable="git" dir="${dir.source}" outputproperty="history.start-branch">
+                            <arg value="rev-parse"/>
+                            <arg value="HEAD"/>
+                        </exec>
+                    </catch>
+                </trycatch>
+                <echo message="HEAD points to ${history.start-branch}"/>
+
+                <exec executable="git" dir="${dir.source}" outputproperty="git.history">
+                    <arg value="rev-list"/>
+                    <arg value="HEAD"/>
+                </exec>
+
+                <var name="success-revision" unset="true"/>
+                <for list="${git.history}" param="commit-hash" delimiter="${line.separator}">
+                    <sequential>
+                        <if><not><isset property="success-revision"/></not><then>
+                            <trycatch>
+                                <try>
+                                    <exec executable="git" dir="${dir.source}" failonerror="true" outputproperty="previous-commit-hash">
+                                        <arg value="rev-parse"/>
+                                        <arg value="@{commit-hash}~1"/>
+                                    </exec>
+                                    <exec executable="git" dir="${dir.source}" failonerror="true">
+                                        <arg value="checkout"/>
+                                        <arg value="-q"/>
+                                        <arg value="${previous-commit-hash}"/>
+                                    </exec>
+                                    <trycatch>
+                                        <try>
+                                            <echo message="Try to compile revision ${previous-commit-hash}"/>
+                                            <antcall target="compile"/>
+                                            <echo message="Revision ${previous-commit-hash} compiled successfully"/>
+                                            <var name="success-revision" value="@{commit-hash}"/>
+                                        </try>
+                                        <catch>
+                                            <echo message="Revision ${previous-commit-hash} compilation failed"/>
+                                        </catch>
+                                    </trycatch>
+                                </try>
+                                <catch>
+                                    <echo message="Git can't checkout previous commit of @{commit-hash}"/>
+                                    <echo message="First revision @{commit-hash} reached"/>
+                                </catch>
+                            </trycatch>
+                        </then></if>
+                    </sequential>
+                </for>
+
+                <if><isset property="success-revision"/><then>
+                    <echo message="Create diff file"/>
+                    <mkdir dir="${dir.target.history}"/>
+                    <property name="diff-file" location="${dir.target.history}/DIFF ${success-revision}.txt"/>
+                    <exec executable="git" dir="${dir.source}" output="${diff-file}">
+                        <arg value="diff"/>
+                        <arg value="${success-revision}~1"/>
+                        <arg value="${success-revision}"/>
+                    </exec>
+                </then></if>
+
+                <echo message="Return to ${history.start-branch}"/>
+                <exec executable="git" dir="${dir.source}">
+                    <arg value="checkout"/>
+                    <arg value="-q"/>
+                    <arg value="${history.start-branch}"/>
+                </exec>
+            </catch>
+        </trycatch>
     </target>
 
 </project>
