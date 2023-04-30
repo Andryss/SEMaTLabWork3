@@ -2,7 +2,9 @@
     <description>
         Script for Apache Ant program to simplify compiling, testing etc. with Web-Programming 3rd lab work
     </description>
-    <description>463563</description>
+    <description>
+        Case 463563
+    </description>
 
     <property file="build.properties"/>
 
@@ -23,12 +25,12 @@
 
     <target name="build" depends="compile" description="Compile sources and pack to an executable war archive">
         <mkdir dir="${dir.target.build}"/>
-        <war destfile="${dir.target.build}/${build.war.name}" webxml="${path.web-xml}" basedir="${dir.source.static}">
+        <war destfile="${dir.target.build}/${build.war.name}.war" webxml="${configs.web-xml}" basedir="${dir.source.static}">
             <classes dir="${dir.source.resources}"/>
             <classes dir="${dir.target.compile}" includes="/**/*.class"/>
-            <classes file="${path.hibernate-config}"/>
+            <classes file="${configs.hibernate-config}"/>
             <lib dir="${dir.libs}"/>
-            <webinf file="${path.faces-config}"/>
+            <webinf file="${configs.faces-config}"/>
             <manifest>
                 <attribute name="Created-By" value="${build.manifest.creator}"/>
             </manifest>
@@ -67,7 +69,7 @@
 
     <target name="scp" depends="build" description="Send built project to server via scp">
         <scp
-                file="${dir.target.build}/${build.war.name}"
+                file="${dir.target.build}/${build.war.name}.war"
                 toDir="${scp.user}@${scp.host}:${scp.destdir}"
                 password="${scp.password}"
                 port="${scp.port}"
@@ -76,19 +78,20 @@
 
     <target name="xml" description="Validate all project's xml files">
         <xmlvalidate>
+            <attribute name="http://xml.org/sax/features/validation" value="true"/>
             <attribute name="http://apache.org/xml/features/validation/schema"  value="true"/>
             <attribute name="http://xml.org/sax/features/namespaces" value="true"/>
-            <fileset dir="${dir.source}" includes="**/*.xml"/>
+            <fileset dir="${dir.project}" includes="**/*.xml" excludes="**/pom.xml"/>
         </xmlvalidate>
         <xmlvalidate lenient="true">
-            <fileset dir="${dir.source}" includes="**/*.xhtml"/>
+            <fileset dir="${dir.project}" includes="**/*.xhtml"/>
         </xmlvalidate>
     </target>
 
     <target name="music" description="Play music after building the sources">
         <sound>
-            <success source="${music.dir}/music-success.wav"/>
-            <fail source="${music.dir}/music-fail.wav"/>
+            <success source="${music.dir}/${music.success.filename}.wav"/>
+            <fail source="${music.dir}/${music.success.filename}.wav"/>
         </sound>
         <antcall target="build"/>
     </target>
@@ -132,12 +135,12 @@
                 <echo message="Extract what HEAD points to (branch/commit)"/>
                 <trycatch>
                     <try>
-                        <exec executable="git" dir="${dir.source}" failonerror="true">
+                        <exec executable="git" dir="${dir.project}" failonerror="true">
                             <arg value="symbolic-ref"/>
                             <arg value="HEAD"/>
                         </exec>
                         <echo message="HEAD is point to branch"/>
-                        <exec executable="git" dir="${dir.source}" outputproperty="history.start-branch">
+                        <exec executable="git" dir="${dir.project}" outputproperty="history.start-branch">
                             <arg value="rev-parse"/>
                             <arg value="--abbrev-ref"/>
                             <arg value="HEAD"/>
@@ -145,7 +148,7 @@
                     </try>
                     <catch>
                         <echo message="HEAD is in 'Detached head' state"/>
-                        <exec executable="git" dir="${dir.source}" outputproperty="history.start-branch">
+                        <exec executable="git" dir="${dir.project}" outputproperty="history.start-branch">
                             <arg value="rev-parse"/>
                             <arg value="HEAD"/>
                         </exec>
@@ -153,7 +156,7 @@
                 </trycatch>
                 <echo message="HEAD points to ${history.start-branch}"/>
 
-                <exec executable="git" dir="${dir.source}" outputproperty="git.history">
+                <exec executable="git" dir="${dir.project}" outputproperty="git.history">
                     <arg value="rev-list"/>
                     <arg value="HEAD"/>
                 </exec>
@@ -164,11 +167,11 @@
                         <if><not><isset property="success-revision"/></not><then>
                             <trycatch>
                                 <try>
-                                    <exec executable="git" dir="${dir.source}" failonerror="true" outputproperty="previous-commit-hash">
+                                    <exec executable="git" dir="${dir.project}" failonerror="true" outputproperty="previous-commit-hash">
                                         <arg value="rev-parse"/>
                                         <arg value="@{commit-hash}~1"/>
                                     </exec>
-                                    <exec executable="git" dir="${dir.source}" failonerror="true">
+                                    <exec executable="git" dir="${dir.project}" failonerror="true">
                                         <arg value="checkout"/>
                                         <arg value="-q"/>
                                         <arg value="${previous-commit-hash}"/>
@@ -198,7 +201,7 @@
                     <echo message="Create diff file"/>
                     <mkdir dir="${dir.target.history}"/>
                     <property name="diff-file" location="${dir.target.history}/DIFF ${success-revision}.txt"/>
-                    <exec executable="git" dir="${dir.source}" output="${diff-file}">
+                    <exec executable="git" dir="${dir.project}" output="${diff-file}">
                         <arg value="diff"/>
                         <arg value="${success-revision}~1"/>
                         <arg value="${success-revision}"/>
@@ -206,7 +209,7 @@
                 </then></if>
 
                 <echo message="Return to ${history.start-branch}"/>
-                <exec executable="git" dir="${dir.source}">
+                <exec executable="git" dir="${dir.project}">
                     <arg value="checkout"/>
                     <arg value="-q"/>
                     <arg value="${history.start-branch}"/>
@@ -224,12 +227,12 @@
         <echo message="Extract what HEAD points to (branch/commit)"/>
         <trycatch>
             <try>
-                <exec executable="git" dir="${dir.source}" failonerror="true">
+                <exec executable="git" dir="${dir.project}" failonerror="true">
                     <arg value="symbolic-ref"/>
                     <arg value="HEAD"/>
                 </exec>
                 <echo message="HEAD is point to branch"/>
-                <exec executable="git" dir="${dir.source}" outputproperty="team.start-branch">
+                <exec executable="git" dir="${dir.project}" outputproperty="team.start-branch">
                     <arg value="rev-parse"/>
                     <arg value="--abbrev-ref"/>
                     <arg value="HEAD"/>
@@ -237,7 +240,7 @@
             </try>
             <catch>
                 <echo message="HEAD is in 'Detached head' state"/>
-                <exec executable="git" dir="${dir.source}" outputproperty="team.start-branch">
+                <exec executable="git" dir="${dir.project}" outputproperty="team.start-branch">
                     <arg value="rev-parse"/>
                     <arg value="HEAD"/>
                 </exec>
@@ -250,7 +253,7 @@
                 <trycatch property="err">
                     <try>
                         <echo message="Step one revision back"/>
-                        <exec executable="git" dir="${dir.source}" failonerror="true">
+                        <exec executable="git" dir="${dir.project}" failonerror="true">
                             <arg value="checkout"/>
                             <arg value="-q"/>
                             <arg value="HEAD~1"/>
@@ -274,7 +277,7 @@
         <zip destfile="${team.zip.dir}/${team.zip.name}.zip" basedir="${team.build.dir}"/>
 
         <echo message="Return to ${team.start-branch}"/>
-        <exec executable="git" dir="${dir.source}">
+        <exec executable="git" dir="${dir.project}">
             <arg value="checkout"/>
             <arg value="-q"/>
             <arg value="${team.start-branch}"/>
@@ -331,7 +334,6 @@
             }
 
             project.setProperty("observable.changed", String.valueOf(ii > 0));
-
         </script>
 
         <if><equals arg1="${observable.changed}" arg2="false"/>
