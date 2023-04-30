@@ -215,4 +215,70 @@
         </trycatch>
     </target>
 
+    <target name="team" description="Get 4 last git revisions, build them and zip">
+        <delete dir="${dir.target.team}"/>
+        <mkdir dir="${dir.target.team}"/>
+        <mkdir dir="${team.build.dir}"/>
+        <mkdir dir="${team.zip.dir}"/>
+
+        <echo message="Extract what HEAD points to (branch/commit)"/>
+        <trycatch>
+            <try>
+                <exec executable="git" dir="${dir.source}" failonerror="true">
+                    <arg value="symbolic-ref"/>
+                    <arg value="HEAD"/>
+                </exec>
+                <echo message="HEAD is point to branch"/>
+                <exec executable="git" dir="${dir.source}" outputproperty="team.start-branch">
+                    <arg value="rev-parse"/>
+                    <arg value="--abbrev-ref"/>
+                    <arg value="HEAD"/>
+                </exec>
+            </try>
+            <catch>
+                <echo message="HEAD is in 'Detached head' state"/>
+                <exec executable="git" dir="${dir.source}" outputproperty="team.start-branch">
+                    <arg value="rev-parse"/>
+                    <arg value="HEAD"/>
+                </exec>
+            </catch>
+        </trycatch>
+        <echo message="HEAD points to ${team.start-branch}"/>
+
+        <for list="1,2,3,4" param="revision">
+            <sequential>
+                <trycatch property="err">
+                    <try>
+                        <echo message="Step one revision back"/>
+                        <exec executable="git" dir="${dir.source}" failonerror="true">
+                            <arg value="checkout"/>
+                            <arg value="-q"/>
+                            <arg value="HEAD~1"/>
+                        </exec>
+                        <echo message="Try to build project"/>
+                        <antcall target="build">
+                            <param name="dir.target.build" value="${team.build.dir}"/>
+                            <param name="build.war.name" value="${ant.project.name}~@{revision}.war"/>
+                            <param name="dir.source.resources" value="${dir.source.resources}"/>
+                        </antcall>
+                        <echo message="Project built successfully"/>
+                    </try>
+                    <catch>
+                        <echo message="Can't build last revision @{revision}: ${err}"/>
+                    </catch>
+                </trycatch>
+            </sequential>
+        </for>
+
+        <echo message="Zip all builds"/>
+        <zip destfile="${team.zip.dir}/${team.zip.name}.zip" basedir="${team.build.dir}"/>
+
+        <echo message="Return to ${team.start-branch}"/>
+        <exec executable="git" dir="${dir.source}">
+            <arg value="checkout"/>
+            <arg value="-q"/>
+            <arg value="${team.start-branch}"/>
+        </exec>
+    </target>
+
 </project>
