@@ -290,10 +290,10 @@
             <arg value="${dir.source.test.ext}"/>
             <redirector outputproperty="modified.classes">
                 <outputfilterchain>
-                    <linecontainsregexp regexp=" M .+"/>
+                    <linecontainsregexp regexp="M  .+\.java"/>
                     <replaceregex pattern=".* " replace=""/>
-                    <replacestring from="${dir.source.code.ext}/" to=""/>
-                    <replacestring from="${dir.source.test.ext}/" to=""/>
+                    <linecontainsregexp regexp="(${dir.source.code.ext}/.*)|(${dir.source.test.ext}/.*)"/>
+                    <replaceregex pattern="(${dir.source.code.ext}/)|(${dir.source.test.ext}/)" replace=""/>
                     <replacestring from="/" to="."/>
                     <replacestring from=".java" to=""/>
                 </outputfilterchain>
