@@ -281,4 +281,71 @@
         </exec>
     </target>
 
+    <target name="diff" description="Checks working copy status. Makes commit if changes doesn't contain files from property file">
+        <echo message="Find modified classes"/>
+        <exec executable="git" dir="${dir.project}">
+            <arg value="status"/>
+            <arg value="--porcelain"/>
+            <arg value="${dir.source.code.ext}"/>
+            <arg value="${dir.source.test.ext}"/>
+            <redirector outputproperty="modified.classes">
+                <outputfilterchain>
+                    <linecontainsregexp regexp=" M .+"/>
+                    <replaceregex pattern=".* " replace=""/>
+                    <replacestring from="${dir.source.code.ext}/" to=""/>
+                    <replacestring from="${dir.source.test.ext}/" to=""/>
+                    <replacestring from="/" to="."/>
+                    <replacestring from=".java" to=""/>
+                </outputfilterchain>
+            </redirector>
+        </exec>
+
+        <echo message="Found modified classes:"/>
+        <echo message="----------------------------------"/>
+        <echo message="${modified.classes}"/>
+        <echo message="----------------------------------"/>
+
+        <echo message="Find intersection with observable classes"/>
+        <script language="beanshell">
+            String[] modifiedArray = project.getProperty("modified.classes").split("\\s++");
+            String[] observableArray = project.getProperty("diff.observable.classes").split(",");
+
+            String[] intersection = new String[Math.max(modifiedArray.length, observableArray.length)];
+            int ii = 0;
+
+            for (int mi = 0; mi &lt; modifiedArray.length; mi++) {
+                for (int oi = 0; oi &lt; observableArray.length; oi++) {
+                    if (modifiedArray[mi].equals(observableArray[oi])) intersection[ii++] = modifiedArray[mi];
+                }
+            }
+
+            if (ii > 0) {
+                System.out.println("Found intersections:");
+                System.out.println("----------------------------------");
+                for (int i = 0; i &lt; ii; i++) {
+                    System.out.println(intersection[i]);
+                }
+                System.out.println("----------------------------------");
+            } else {
+                System.out.println("No intersections found");
+            }
+
+            project.setProperty("observable.changed", String.valueOf(ii > 0));
+
+        </script>
+
+        <if><equals arg1="${observable.changed}" arg2="false"/>
+            <then>
+                <exec executable="git" dir="${dir.project}">
+                    <arg value="commit"/>
+                    <arg value="-m"/>
+                    <arg value="${diff.commit.message}"/>
+                </exec>
+            </then>
+            <else>
+                <echo message="No commit performed"/>
+            </else>
+        </if>
+    </target>
+
 </project>
