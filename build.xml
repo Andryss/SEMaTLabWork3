@@ -54,9 +54,10 @@
 
     <target name="test" depends="build,test-compile" description="Launch project Junit tests">
         <mkdir dir="${test.report.dir}"/>
-        <junit printsummary="withOutAndErr" haltonfailure="true">
+        <junit printsummary="true" haltonfailure="true" fork="true">
             <classpath>
                 <path refid="dependencies-jars"/>
+                <pathelement location="${dir.source.test-resources}"/>
                 <pathelement location="${dir.target.compile}"/>
                 <pathelement location="${test.compile.dir}"/>
             </classpath>

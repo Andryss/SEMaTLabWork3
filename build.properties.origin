@@ -7,29 +7,68 @@ build.sysclasspath=ignore
 dir.libs=dependencies
 
 # Source folder mapping
-dir.source=WebLabWork3/src
-dir.source.code=${dir.source}/main/java
-dir.source.resources=${dir.source}/main/static
-dir.source.configs=${dir.source}/main/webapp
-dir.source.test=${dir.source}/test/java
+dir.source.ext=src
+dir.source.main.ext=${dir.source.ext}/main
+dir.source.code.ext=${dir.source.main.ext}/java
+dir.source.resources.ext=${dir.source.main.ext}/resources
+dir.source.static.ext=${dir.source.main.ext}/static
+dir.source.configs.ext=${dir.source.main.ext}/webapp
+dir.source.testdir.ext=${dir.source.ext}/test
+dir.source.test.ext=${dir.source.testdir.ext}/java
+dir.source.test-resources.ext=${dir.source.testdir.ext}/webapp
+
+dir.project=WebLabWork3
+dir.source=${dir.project}/${dir.source.ext}
+dir.source.main=${dir.project}/${dir.source.main.ext}
+dir.source.code=${dir.project}/${dir.source.code.ext}
+dir.source.resources=${dir.project}/${dir.source.resources.ext}
+dir.source.static=${dir.project}/${dir.source.static.ext}
+dir.source.configs=${dir.project}/${dir.source.configs.ext}
+dir.source.testdir=${dir.project}/${dir.source.testdir.ext}
+dir.source.test=${dir.project}/${dir.source.test.ext}
+dir.source.test-resources=${dir.project}/${dir.source.test-resources.ext}
 
 # Config file paths
-path.web-xml=${dir.source.configs}/web.xml
-path.faces-config=${dir.source.configs}/faces-config.xml
-path.hibernate-config=${dir.source.configs}/hibernate.cfg.xml
+configs.web-xml.ext=web.xml
+configs.faces-config.ext=faces-config.xml
+configs.hibernate-config.ext=hibernate.cfg.xml
+
+configs.web-xml=${dir.source.configs}/${configs.web-xml.ext}
+configs.faces-config=${dir.source.configs}/${configs.faces-config.ext}
+configs.hibernate-config=${dir.source.configs}/${configs.hibernate-config.ext}
 
 # Target folder mapping
 dir.target=target
 dir.target.compile=${dir.target}/compile
 dir.target.build=${dir.target}/build
-dir.target.tests=${dir.target}/tests
+dir.target.tests=${dir.target}/test
+dir.target.native2ascii=${dir.target}/native2ascii
+dir.target.report=${dir.target}/report
+dir.target.history=${dir.target}/history
+dir.target.team=${dir.target}/team
 
 # Target specific properties
-build.war.name=${ant.project.name}.war
-build.manifest.creator=???
+build.war.name=${ant.project.name}
+build.manifest.creator=andrk
+
+test.compile.dir=${dir.target.tests}/tests
+test.report.dir=${dir.target.tests}/reports
 
 scp.host=???
 scp.port=???
 scp.user=???
 scp.password=???
-scp.destdir=???
+scp.destdir=~
+
+music.dir=music
+music.success.filename=music-success
+music.fail.filename=music-fail
+
+report.project.report.dir=WebLabWork3/reports
+
+team.build.dir=${dir.target.team}/build
+team.zip.dir=${dir.target.team}/zip
+team.zip.name=${ant.project.name}~1234
+
+diff.observable.classes=model.AreaCheckerTest,model.Request,view.beans.FormBean
+diff.commit.message=Commit with no observable classes modified
